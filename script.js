@@ -43,7 +43,7 @@ const DRIVERS = [
     { id: 21, name: "Jeff Matiasevich", team: "Kawasaki", era: 2, ovr: 86 },
     { id: 22, name: "Donnie Hansen", team: "Honda", era: 2, ovr: 88 },
     { id: 23, name: "Mark Barnett", team: "Honda", era: 2, ovr: 87 },
-    { id: 17, name: "Kent Gaston", team: "Honda", era: 2, ovr: 83 },
+    { id: 24, name: "Kent Gaston", team: "Honda", era: 2, ovr: 83 },
     { id: 25, name: "Larry Ward", team: "Suzuki", era: 2, ovr: 85 },
     { id: 26, name: "Eddie Warren", team: "Suzuki", era: 2, ovr: 84 },
     { id: 27, name: "Mike Kiedrowski", team: "Honda", era: 2, ovr: 90 },
@@ -191,9 +191,9 @@ function eraSynergy(drafted) {
 
 // --- SIMULATE A SINGLE RACE ---
 function simulateRace(playerOVR, raceType, rng) {
-    // Generate AI field of 35 other cars with realistic OVR distribution
+    // Generate AI field of 21 other riders with realistic OVR distribution
     const field = [];
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 21; i++) {
         // AI drivers weighted around OVR 84-93 (strong Supercross field, all-road circuits favor elite teams)
         const aiOVR = 84 + Math.floor(rng() * 10);
         field.push({ name: `AI #${i+2}`, ovr: aiOVR, type: raceType });
@@ -229,13 +229,9 @@ function simulateRace(playerOVR, raceType, rng) {
     return { playerPos, field };
 }
 
-// --- POINTS CALCULATION (Modern Supercross: 25-1 system, top 15 score) ---
+// --- POINTS CALCULATION (AMA Supercross: 22-rider Main Event) ---
 function pointsForPos(pos, raceIdx) {
-    // Modern Supercross: 25-1 system, top 15 score (since 2023)
-    // P1=25, P2=20, P3=16, P4=13, P5=11, P6=10, P7=9, P8=8, P9=7, P10=6
-    // P11=5, P12=4, P13=3, P14=2, P15=1, P16+ = 0
-    // No double points at any race
-    const POINTS = [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    const POINTS = [25, 22, 20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
     return POINTS[pos - 1] || 0;
 }
 
@@ -276,7 +272,8 @@ function renderDrivers() {
     const drivers = DRIVERS.filter(d => d.era === state.selectedEra);
     drivers.forEach(d => {
         const drafted = state.drafted.some(x => x.id === d.id);
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'driver-card' + (drafted ? ' drafted' : '');
         card.innerHTML = `
             <div class="ovr">${d.ovr}</div>
@@ -327,7 +324,7 @@ function updateDraftUI() {
         helpText.textContent = `Pick ${5 - n} more. Avg OVR: ${$('stat-avg').textContent}`;
         status.classList.remove('full');
     } else {
-        countText.textContent = '🏎️ Roster Complete!';
+        countText.textContent = '🏎 Roster Complete!';
         helpText.textContent = `Avg OVR: ${$('stat-avg').textContent} (incl +${eraSynergy(state.drafted).toFixed(1)} era synergy)`;
         status.classList.add('full');
     }
@@ -340,7 +337,9 @@ function updateDraftUI() {
         rosterDiv.className = 'roster';
         rosterDiv.style.marginTop = '10px';
         state.drafted.forEach(d => {
-            const chip = document.createElement('span');
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.setAttribute('aria-label', `Remove ${d.name}`);
             chip.className = 'roster-chip';
             chip.textContent = `${d.name} ${d.ovr}`;
             chip.onclick = () => undraftDriver(d.id);
@@ -379,6 +378,9 @@ $('start-btn').onclick = () => {
     state.season.standings[state.season.primaryDriver.id] = 0;
     state.drafted.forEach(d => state.season.standings[d.id] = 0);
 
+    ['season-wins', 'season-streak', 'season-points'].forEach(id => {
+        $(id).textContent = '0';
+    });
     switchScreen('season');
     $('race-counter').textContent = '1';
     $('race-counter-end') && ($('race-counter-end').textContent = '1');
@@ -496,11 +498,11 @@ function showFinale() {
 
     // Title
     let title = '';
-    if (wins === 17) title = '🏆 UNDEFEATED — 17-0 LEGEND!';
-    else if (wins >= 18) title = `🏆 ELITE — ${wins} wins / 17`;
-    else if (wins >= 15) title = `🏟️ STRONG — ${wins} wins / 17`;
-    else if (wins >= 10) title = `🏟️ CHAMPIONSHIP BID — ${wins} wins / 17`;
-    else title = `${wins} wins / 17 — Try a stronger roster next time`;
+    if (wins === totalRaces) title = `🏆 UNDEFEATED — ${totalRaces}-0 LEGEND!`;
+    else if (wins >= 13) title = `🏆 ELITE — ${wins} wins / ${totalRaces}`;
+    else if (wins >= 11) title = `🏟 STRONG — ${wins} wins / ${totalRaces}`;
+    else if (wins >= 7) title = `🏟 CHAMPIONSHIP BID — ${wins} wins / ${totalRaces}`;
+    else title = `${wins} wins / ${totalRaces} — Try a stronger roster next time`;
     $('finale-title').textContent = title;
 
     // Badges
@@ -546,7 +548,7 @@ $('replay-btn').onclick = () => {
 };
 
 $('share-btn').onclick = () => {
-    const text = `🏟️ My Supercross 17-0 season: ${$('share-record').textContent}\n` +
+    const text = `🏟 My Supercross 17-0 season: ${$('share-record').textContent}\n` +
                  `Driver: ${state.season.primaryDriver.name} (OVR ${state.season.primaryDriver.ovr})\n` +
                  `Best Streak: ${state.season.bestStreak}\n` +
                  `#SX17Zero #UndefeatedSeason`;
@@ -554,7 +556,7 @@ $('share-btn').onclick = () => {
         navigator.clipboard.writeText(text).then(() => {
             $('share-btn').textContent = '✅ Copied!';
             setTimeout(() => $('share-btn').textContent = '📋 Copy Share Text', 1500);
-        });
+        }).catch(() => alert(text));
     } else {
         alert(text);
     }

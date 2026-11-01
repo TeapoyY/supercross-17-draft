@@ -7,8 +7,8 @@ with open('/tmp/supercross-build/source/index.html', 'r', encoding='utf-8') as f
 
 # === 1) Title + meta ===
 html = html.replace(
-    '<title>🏍️ 24-0: World Superbike Draft — Can You Sweep The Season?</title>',
-    '<title>🏟️ 17-0: AMA Supercross Draft — Can You Sweep The Season?</title>'
+    '<title>🏍\ufe0f 24-0: World Superbike Draft — Can You Sweep The Season?</title>',
+    '<title>🏟\ufe0f 17-0: AMA Supercross Draft — Can You Sweep The Season?</title>'
 )
 html = html.replace(
     'Draft legendary World Superbike riders across the eras and try to win every race in a 24-race WSBK season. 84 legends. 6 eras. 24 races. 1 goal: 24-0.',
@@ -23,8 +23,8 @@ html = html.replace(
 
 # === 3) h1 ===
 html = html.replace(
-    '<h1>🏍️ 24-0: World Superbike Draft</h1>',
-    '<h1>🏟️ 17-0: AMA Supercross Draft</h1>'
+    '<h1>🏍\ufe0f 24-0: World Superbike Draft</h1>',
+    '<h1>🏟\ufe0f 17-0: AMA Supercross Draft</h1>'
 )
 
 # === 4) Pick 5 (HTML + JS) ===
@@ -45,14 +45,14 @@ html = html.replace(
 
 # === 6) Footer cross-link list + tagline ===
 html = html.replace(
-    'Made for 🏍️ World Superbike fans · 84 legends · 6 eras · 24 races · 1 dream<br>',
-    'Made for 🏟️ AMA Supercross fans · 84 legends · 6 eras · 17 rounds · 1 dream<br>'
+    'Made for 🏍\ufe0f World Superbike fans · 84 legends · 6 eras · 24 races · 1 dream<br>',
+    'Made for 🏟\ufe0f AMA Supercross fans · 84 legends · 6 eras · 17 rounds · 1 dream<br>'
 )
 
 # === 7) Cross-link matrix to include X-0 #21 ===
 # Replace the cross-link list with all 21 variants
 old_links = 'A tribute to <a href="https://github.com/TeapoyY/squad-draft-football" style="color:var(--accent);">38-0</a> & <a href="https://github.com/TeapoyY/app-pixelgp-web" style="color:var(--accent);">24-0</a> drafting lineage.'
-new_links = '''🏟️ <a href="https://github.com/TeapoyY/supercross-17-draft" style="color:var(--accent);">17-0 SX</a> · <a href="https://github.com/TeapoyY/moto2-22-draft" style="color:var(--accent);">22-0 Moto2</a> · <a href="https://github.com/TeapoyY/wsbk-24-draft" style="color:var(--accent);">24-0 WSBK</a> · <a href="https://github.com/TeapoyY/motogp-20-draft" style="color:var(--accent);">20-0 MotoGP</a> · <a href="https://github.com/TeapoyY/endurance-24-draft" style="color:var(--accent);">24-0 WEC</a> · <a href="https://github.com/TeapoyY/tour-de-france-21-draft" style="color:var(--accent);">21-0 TdF</a> · <a href="https://github.com/TeapoyY/squad-draft-football" style="color:var(--accent);">38-0 NFL</a>'''
+new_links = '''🏟\ufe0f <a href="https://github.com/TeapoyY/supercross-17-draft" style="color:var(--accent);">17-0 SX</a> · <a href="https://github.com/TeapoyY/moto2-22-draft" style="color:var(--accent);">22-0 Moto2</a> · <a href="https://github.com/TeapoyY/wsbk-24-draft" style="color:var(--accent);">24-0 WSBK</a> · <a href="https://github.com/TeapoyY/motogp-20-draft" style="color:var(--accent);">20-0 MotoGP</a> · <a href="https://github.com/TeapoyY/endurance-24-draft" style="color:var(--accent);">24-0 WEC</a> · <a href="https://github.com/TeapoyY/tour-de-france-21-draft" style="color:var(--accent);">21-0 TdF</a> · <a href="https://github.com/TeapoyY/squad-draft-football" style="color:var(--accent);">38-0 NFL</a>'''
 html = html.replace(old_links, new_links)
 
 # === 8) JS header comment ===
@@ -242,7 +242,6 @@ html = re.sub(r'OF 24\b', 'OF 17', html)
 html = re.sub(r'/\s*24\s*races', '/ 17 races', html)
 html = re.sub(r'\b24\s+races\b', '17 races', html)
 html = re.sub(r'24-0', '17-0', html)
-html = re.sub(r'\b24\b(?!-0|\d)', '17', html)  # avoid breaking id="24" etc — but careful
 
 # Safer: only replace specific number-24 contexts
 # Replace "wins / 24" → "wins / 17" (used in finale titles)
@@ -250,32 +249,19 @@ html = re.sub(r'wins / 24', 'wins / 17', html)
 # Replace "24-race" → "17-round"
 html = re.sub(r'\b24-race\b', '17-round', html)
 
-# === 14) Finale threshold: 24 → 17 (perfect target) ===
-html = html.replace(
-    "if (wins === 24) title = '🏆 UNDEFEATED — 24-0 LEGEND!';",
-    "if (wins === 17) title = '🏆 UNDEFEATED — 17-0 LEGEND!';"
+# === 14) Finale thresholds for the 17-round season ===
+html = re.sub(
+    r"if \(wins === \d+\) title =[\s\S]*?else title = [^\n]*;",
+    lambda match: 'if (wins === totalRaces) title = `🏆 UNDEFEATED — ${totalRaces}-0 LEGEND!`;\n    else if (wins >= 13) title = `🏆 ELITE — ${wins} wins / ${totalRaces}`;\n    else if (wins >= 11) title = `🏟 STRONG — ${wins} wins / ${totalRaces}`;\n    else if (wins >= 7) title = `🏟 CHAMPIONSHIP BID — ${wins} wins / ${totalRaces}`;\n    else title = `${wins} wins / ${totalRaces} — Try a stronger roster next time`;',
+    html
 )
-html = html.replace(
-    "else if (wins >= 18) title = `🏆 ELITE — ${wins} wins / 24`;",
-    "else if (wins >= 13) title = `🏆 ELITE — ${wins} wins / 17`;"
-)
-html = html.replace(
-    "else if (wins >= 15) title = `🏍️ STRONG — ${wins} wins / 24`;",
-    "else if (wins >= 11) title = `🏟️ STRONG — ${wins} wins / 17`;"
-)
-html = html.replace(
-    "else if (wins >= 10) title = `🏍️ CHAMPIONSHIP BID — ${wins} wins / 24`;",
-    "else if (wins >= 7) title = `🏟️ CHAMPIONSHIP BID — ${wins} wins / 17`;"
-)
-html = html.replace(
-    "else title = `${wins} wins / 24 — Try a stronger roster next time`;",
-    "else title = `${wins} wins / 17 — Try a stronger roster next time`;"
-)
+
+html = html.replace('if (wins === 24) badgesHTML', 'if (wins === 17) badgesHTML')
 
 # === 15) Share text ===
 html = html.replace(
-    'const text = `🏍️ My WSBK 24-0 season: ${$(\'share-record\').textContent}\\n` +',
-    'const text = `🏟️ My SX 17-0 season: ${$(\'share-record\').textContent}\\n` +'
+    'const text = `🏍\ufe0f My WSBK 24-0 season: ${$(\'share-record\').textContent}\\n` +',
+    'const text = `🏟\ufe0f My SX 17-0 season: ${$(\'share-record\').textContent}\\n` +'
 )
 html = html.replace(
     '                 `#WSBK24Zero #UndefeatedSeason`;',
@@ -289,11 +275,25 @@ html = html.replace('WSBK Ducati red', 'Supercross dirt orange')
 
 # === 17) Belt-and-suspenders: replace any remaining 24-0 with 17-0 in JS context ===
 # (Don't break "24-0" in dates like 2024)
-# Already done above, but let's belt-and-suspenders 🏍️ → 🏟️
-html = html.replace('🏍️', '🏟️')
+# Already done above, but let's belt-and-suspenders 🏍\ufe0f → 🏟\ufe0f
+html = html.replace('🏍\ufe0f', '🏟\ufe0f')
 
 # === 18) n !== 6 defense ===
 html = html.replace("disabled = n !== 6;", "disabled = n !== 5;")
+
+# Review fixes shared by the generated page.
+html = html.replace(', maximum-scale=1.0, user-scalable=no', '')
+html = html.replace('  * { box-sizing:', '  [hidden] { display: none !important; }\n  * { box-sizing:')
+html = html.replace('  .driver-card {', '  .driver-card {\n    color: inherit;\n    font: inherit;\n    text-align: left;')
+html = html.replace('  .roster-chip {', '  .roster-chip {\n    border: none;\n    font-family: inherit;')
+html = html.replace("const card = document.createElement('div');", "const card = document.createElement('button');\n        card.type = 'button';")
+html = html.replace("const chip = document.createElement('span');", "const chip = document.createElement('button');\n            chip.type = 'button';\n            chip.setAttribute('aria-label', `Remove ${d.name}`);")
+html = html.replace('for (let i = 0; i < 35; i++)', 'for (let i = 0; i < 21; i++)')
+html = html.replace('AI field of 35 other cars', 'AI field of 21 other riders')
+html = re.sub(r'// --- POINTS CALCULATION[^\n]*\nfunction pointsForPos\(pos, raceIdx\) \{[\s\S]*?    const POINTS = \[[^\]]*\];', "// --- POINTS CALCULATION (AMA Supercross: 22-rider Main Event) ---\nfunction pointsForPos(pos, raceIdx) {\n    const POINTS = [25, 22, 20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];", html)
+html = html.replace("    switchScreen('season');", "    ['season-wins', 'season-streak', 'season-points'].forEach(id => {\n        $(id).textContent = '0';\n    });\n    switchScreen('season');")
+html = html.replace("        });\n    } else {\n        alert(text);", "        }).catch(() => alert(text));\n    } else {\n        alert(text);")
+html = html.replace('\ufe0f', '')
 
 # Write output
 with open('/tmp/supercross-build/output.html', 'w', encoding='utf-8') as f:
